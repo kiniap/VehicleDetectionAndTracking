@@ -46,3 +46,6 @@ Test video output with vehicle detection and tracking is in video_output folder:
 
 ## Project video
 Project video output with vehicle detection and tracking is in video_output folder: project_video_out_final.mp4
+
+## Output images
+Added various output images to the output_images folder
