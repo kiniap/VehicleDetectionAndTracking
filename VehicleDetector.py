@@ -66,12 +66,12 @@ def get_hog_features(img, orient, pix_per_cell, cell_per_block,
 
 
 # Define a single function that can extract features using hog sub-sampling and make predictions
-def find_cars_in_image(img, color_space, hog_channel, ystart, ystop, scale, svc, X_scaler, 
+def find_cars_in_image(img, color_space, hog_channel, xstart, ystart, ystop, scale, svc, X_scaler, 
                        orient, pix_per_cell, cell_per_block, spatial_size, hist_bins, cells_per_step = 2, get_all_boxes=False):
     
     #draw_img = np.copy(img)
     img = img.astype(np.float32)/255
-    img_tosearch = img[ystart:ystop,:,:]
+    img_tosearch = img[ystart:ystop,xstart:img.shape[1],:]
     
     #Apply color conversion if other than 'RGB'
     if color_space != 'RGB':
@@ -149,7 +149,7 @@ def find_cars_in_image(img, color_space, hog_channel, ystart, ystop, scale, svc,
                 ytop_draw = np.int(ytop*scale)
                 win_draw = np.int(window*scale)
                 #cv2.rectangle(draw_img,(xbox_left, ytop_draw+ystart),(xbox_left+win_draw,ytop_draw+win_draw+ystart),(0,0,255),6) 
-                boxes.append(((xbox_left, ytop_draw+ystart),(xbox_left+win_draw,ytop_draw+win_draw+ystart)))
+                boxes.append(((xbox_left+xstart, ytop_draw+ystart),(xbox_left+win_draw+xstart,ytop_draw+win_draw+ystart)))
 
     return boxes
 
@@ -205,34 +205,38 @@ class VehicleDetector():
         current_boxes=[]
     
         # Scale 1.1
+        xstart1_1 = 160 
         ystart1_1 = 380
         ystop1_1 = 560
         scale1_1 = 1.1
-        boxes1_1 = find_cars_in_image(image, color_space, hog_channel, ystart1_1, ystop1_1, scale1_1, svc, X_scaler, 
+        boxes1_1 = find_cars_in_image(image, color_space, hog_channel, xstart1_1, ystart1_1, ystop1_1, scale1_1, svc, X_scaler, 
                             orient, pix_per_cell, cell_per_block, spatial_size, hist_bins, get_all_boxes=False)
         current_boxes.extend(boxes1_1)
 
         # Scale 1.5
+        xstart1_5 = 250
         ystart1_5 = 400
         ystop1_5 = 650
         scale1_5 = 1.5
-        boxes1_5 = find_cars_in_image(image, color_space, hog_channel, ystart1_5, ystop1_5, scale1_5, svc, X_scaler, 
+        boxes1_5 = find_cars_in_image(image, color_space, hog_channel, xstart1_5,ystart1_5, ystop1_5, scale1_5, svc, X_scaler, 
                            orient, pix_per_cell, cell_per_block, spatial_size, hist_bins, get_all_boxes=False)
         current_boxes.extend(boxes1_5)
 
         # Scale 2.0
+        xstart2 = 340
         ystart2 = 400
         ystop2 = 650
         scale2 = 1.9
-        boxes2 = find_cars_in_image(image, color_space, hog_channel, ystart2, ystop2, scale2, svc, X_scaler, 
+        boxes2 = find_cars_in_image(image, color_space, hog_channel, xstart2, ystart2, ystop2, scale2, svc, X_scaler, 
                            orient, pix_per_cell, cell_per_block, spatial_size, hist_bins, get_all_boxes=False)
         current_boxes.extend(boxes2)
 
         # Scale 3.0
-        ystart3 = 400
+        xstart3 = 420
+        ystart3 = 440
         ystop3 = 700
         scale3 = 2.8
-        boxes3 = find_cars_in_image(image, color_space, hog_channel, ystart3, ystop3, scale3, svc, X_scaler, 
+        boxes3 = find_cars_in_image(image, color_space, hog_channel, xstart3, ystart3, ystop3, scale3, svc, X_scaler, 
                            orient, pix_per_cell, cell_per_block, spatial_size, hist_bins, cells_per_step = 1, get_all_boxes=False)
         current_boxes.extend(boxes3)
     
@@ -252,7 +256,7 @@ class VehicleDetector():
         
         # Apply labels to the heatmap using label() function from scipy.ndimage.measurements
         labels = label(average_heatmap)
-        number_of_cars_found = labels[1]
+        #number_of_cars_found = labels[1]
     
         # Draw labeled boxes
         draw_img = draw_labeled_bboxes(np.copy(image), labels)
@@ -270,22 +274,39 @@ spatial_size = dist_pickle["spatial_size"]
 hist_bins = dist_pickle["hist_bins"]
 hog_channel = "ALL" # Can be 0, 1, 2, or "ALL"
 
-test_images = glob.glob('./test_images/test*.jpg')
-f,ax = plt.subplots(3,2,figsize=(18,12))
-ax = ax.ravel()
-f.tight_layout()
 
+'''
+Run the Vehicle Detector on all the test images
+'''
+# test_images = glob.glob('./test_images/test*.jpg')
+# f,ax = plt.subplots(3,2,figsize=(18,12))
+# ax = ax.ravel()
+# f.tight_layout()
+#   
 # for i, img in enumerate(test_images):
 #     vd = VehicleDetector()
 #     output_img = vd.vehicle_detection_pipeline(mpimg.imread(img))
 #     ax[i].imshow(output_img)
 #     ax[i].set_axis_off()
-#    
+#      
 # plt.show()
 
-test_video_output = 'video_output/test_video_out17_YUV20_avg10b2_threshOnAvg.mp4'
+'''
+Run the Vehicle Detector on the Test Video
+'''
+# test_video_output = 'video_output/test_video_out22_YUV20_avg10b2_threshOnAvg_xstart_many.mp4'
+# vd = VehicleDetector()
+#           
+# clip1 = VideoFileClip("test_video.mp4")
+# test_clip = clip1.fl_image(vd.vehicle_detection_pipeline) #NOTE: this function expects color images!!
+# test_clip.write_videofile(test_video_output, audio=False)
+
+'''
+Run the Vehicle Detector on the Project Video
+'''
+project_video_output = 'video_output/project_video_out23.mp4'
 vd = VehicleDetector()
-       
-clip1 = VideoFileClip("test_video.mp4")
-test_clip = clip1.fl_image(vd.vehicle_detection_pipeline) #NOTE: this function expects color images!!
-test_clip.write_videofile(test_video_output, audio=False)
+      
+clip1 = VideoFileClip("project_video.mp4")
+project_clip = clip1.fl_image(vd.vehicle_detection_pipeline) #NOTE: this function expects color images!!
+project_clip.write_videofile(project_video_output, audio=False)
